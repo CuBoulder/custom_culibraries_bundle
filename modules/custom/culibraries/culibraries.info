@@ -1,0 +1,5 @@
+name = CuLibrarires
+description = Custom module for CU Libraries
+core = 7.x
+
+dependencies[] = cu_libraries_search
