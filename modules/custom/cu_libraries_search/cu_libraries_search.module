@@ -1,0 +1,185 @@
+<?php
+
+
+
+function cu_libraries_search_page_alter(&$page) {
+  drupal_add_css(drupal_get_path('module', 'cu_libraries_search') . '/css/cu-libraries-search.css');
+  $site_search = variable_get('hide_site_search', 'show');
+  if ($site_search == 'hide') {
+    drupal_add_css('#block-google-appliance-ga-block-search-form {display:none !important;}', array('type' => 'inline'));
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function cu_libraries_search_block_info() {
+  $blocks['libraries_search_large'] = array(
+    'info' => t('Large Libraries Search'),
+  );
+  $blocks['libraries_search_small'] = array(
+    'info' => t('Small Libraries Search'),
+  );
+  return $blocks;
+}
+
+function cu_libraries_search_search_form($form, &$form_state) {
+  $form = array();
+  $form['libraries_search'] = array(
+    '#type' => 'fieldset',
+    '#title' => NULL,
+    '#attributes' => array('class' => array('container-inline')),
+  );
+  $form['libraries_search']['search_string'] = array(
+    '#type' => 'textfield',
+    //'#default_value' => t('Search CU Libraries'),
+    '#attributes' => array('placeholder' => 'Search CU Libraries'),
+    '#title' => 'Search CU Libraries',
+    '#title_display' => 'invisible',
+  );
+  $form['libraries_search']['search_type'] = array(
+    '#type' => 'select',
+    '#options' => array (
+      'Catalog',
+      'Articles',
+      'Reserves',
+      'Research Guides',
+      'Site Search',
+    ),
+  );
+  $form['libraries_search']['search_submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Search',
+    '#prefix' => '<div class="form-submit-wrapper">',
+    '#suffix' => '</div>',
+  );
+  $form['#submit'][] = 'cu_libraries_search_search_form_submit';
+  return $form;
+}
+
+function cu_libraries_search_search_form_submit($form, &$form_state) {
+
+}
+
+function cu_libraries_search_block_view($delta = '') {
+  switch ($delta) {
+    case 'libraries_search_large':
+      $search_background_image = variable_get('search_background_image', NULL);
+      $block['subject'] = '';
+      $search_form = drupal_get_form('cu_libraries_search_search_form');
+      $block['content']['search_form'] = $search_form;
+      $block['content']['#prefix'] = '<div class="cu-libaries-search-large" style="background-image:url(' . $search_background_image . ');">';
+      $block['content']['#suffix'] = '</div>';
+
+      // Get search content
+      $search_content = variable_get('libraries_search_content_large', NULL);
+      if (isset($search_content)) {
+        $search_content = check_markup($search_content['value'], $search_content['format']);
+        $block['subject'] = '';
+        $block['content']['search_content']['#markup'] = $search_content;
+        $block['content']['search_content']['#prefix'] = '<div class="libraries-search-content">';
+        $block['content']['search_content']['#suffix'] = '</div>';
+      }
+      break;
+
+    case 'libraries_search_small':
+      // Get search form
+      $search_form = drupal_get_form('cu_libraries_search_search_form');
+      $block['content']['search_form'] = $search_form;
+
+      // Get search content
+      $search_content = variable_get('libraries_search_content_small', NULL);
+      if (isset($search_content)) {
+        $search_content = check_markup($search_content['value'], $search_content['format']);
+        $block['subject'] = '';
+        $block['content']['search_content']['#markup'] = $search_content;
+        $block['content']['search_content']['#prefix'] = '<div class="libraries-search-content">';
+        $block['content']['search_content']['#suffix'] = '</div>';
+      }
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function cu_libraries_search_block_configure($delta = '') {
+  switch($delta) {
+    case 'libraries_search_large':
+      $search_background_image = variable_get('search_background_image', NULL);
+      $search_content = variable_get('libraries_search_content_large', array(
+        'value' => '',
+        'format' => 'wysiwyg',
+      ));
+      $form['search_background_image'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Search Background Image'),
+        '#default_value' => $search_background_image,
+        '#required' => FALSE,
+      );
+      $form['libraries_search_content'] = array(
+        '#type' => 'text_format',
+        '#title' => t('Libraries Search Content'),
+        '#default_value' => $search_content['value'],
+        '#format' => $search_content['format'],
+        '#required' => FALSE,
+      );
+      $form['hide_site_search'] = array(
+        '#type' => 'radios',
+        '#title' => t('Site Search'),
+        '#options' => array(
+          'show' => 'Show',
+          'hide' => 'Hide',
+        ),
+        '#default_value' => variable_get('hide_site_search', 'show'),
+        '#required' => TRUE,
+      );
+      break;
+    case 'libraries_search_small':
+      $search_content = variable_get('libraries_search_content_small', array(
+        'value' => '',
+        'format' => 'wysiwyg',
+      ));
+      $form['libraries_search_content'] = array(
+        '#type' => 'text_format',
+        '#title' => t('Libraries Search Content'),
+        '#default_value' => $search_content['value'],
+        '#format' => $search_content['format'],
+        '#required' => FALSE,
+      );
+      $form['hide_site_search'] = array(
+        '#type' => 'radios',
+        '#title' => t('Site Search'),
+        '#options' => array(
+          'show' => 'Show',
+          'hide' => 'Hide',
+        ),
+        '#default_value' => variable_get('hide_site_search', 'show'),
+        '#required' => TRUE,
+      );
+      break;
+  }
+
+  return $form;
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function cu_libraries_search_block_save($delta = '', $edit = array()) {
+  switch ($delta) {
+    case 'libraries_search_large':
+      // Have Drupal save the string to the database.
+      variable_set('search_background_image', $edit['search_background_image']);
+      variable_set('libraries_search_content_large', $edit['libraries_search_content']);
+      variable_set('hide_site_search', $edit['hide_site_search']);
+      break;
+    case 'libraries_search_small':
+      // Have Drupal save the string to the database.
+      variable_set('libraries_search_content_small', $edit['libraries_search_content']);
+      variable_set('hide_site_search', $edit['hide_site_search']);
+      break;
+  }
+  return;
+}
