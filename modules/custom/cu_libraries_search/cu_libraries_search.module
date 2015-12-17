@@ -1,5 +1,62 @@
 <?php
 
+/**
+ * Implements hook_menu().
+ */
+function cu_libraries_search_menu() {
+  // Search settings
+  $items['admin/config/system/librarysearch'] = array(
+    'title' => 'Library Search Settings',
+    'description' => 'Configure library search settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('cu_libraries_search_settings_form'),
+    'access arguments' => array('administer site configuration'),
+  );
+  return $items;
+}
+
+function cu_libraries_search_settings_form($form, &$form_state) {
+  $search_settings = variable_get('cu_libraries_search_settings', '');
+  $form = array();
+  $form['cu_libraries_search_settings'] = array(
+    '#type' => 'textarea',
+    '#default_value' => variable_get('cu_libraries_search_settings', ''),
+    '#title' => t('Search Options'),
+    '#description' => t('Enter one value per row in the form: <em>searchkey|Search Name|Search URL</em>'),
+    '#wysiwyg' => FALSE,
+  );
+  $form['hide_site_search'] = array(
+    '#type' => 'radios',
+    '#title' => t('Site Search'),
+    '#options' => array(
+      'show' => 'Show',
+      'hide' => 'Hide',
+    ),
+    '#default_value' => variable_get('hide_site_search', 'show'),
+    '#required' => TRUE,
+  );
+  $form['submit'] = array('#type' => 'submit', '#value' => t('Save Search Settings'));
+  $form['#submit'][] = 'cu_libraries_search_settings_form_submit';
+  return $form;
+}
+
+function cu_libraries_search_settings_form_submit($form, &$form_state) {
+  $search_settings = $form_state['values']['cu_libraries_search_settings'];
+  variable_set('cu_libraries_search_settings', $search_settings);
+  $site_search_settings = $form_state['values']['hide_site_search'];
+  variable_set('hide_site_search', $site_search_settings);
+}
+
+function cu_libraries_search_options() {
+  $search_settings = variable_get('cu_libraries_search_settings', '');
+  $search_options = explode("\n", $search_settings);
+  $options = array();
+  foreach ($search_options as $search_option) {
+    $option = explode("|", $search_option);
+    $options[$option[0]] = $option[1];
+  }
+  return $options;
+}
 
 
 function cu_libraries_search_page_alter(&$page) {
@@ -39,13 +96,7 @@ function cu_libraries_search_search_form($form, &$form_state) {
   );
   $form['libraries_search']['search_type'] = array(
     '#type' => 'select',
-    '#options' => array (
-      'Catalog',
-      'Articles',
-      'Reserves',
-      'Research Guides',
-      'Site Search',
-    ),
+    '#options' => cu_libraries_search_options(),
   );
   $form['libraries_search']['search_submit'] = array(
     '#type' => 'submit',
@@ -58,6 +109,39 @@ function cu_libraries_search_search_form($form, &$form_state) {
 }
 
 function cu_libraries_search_search_form_submit($form, &$form_state) {
+  $search_settings = variable_get('cu_libraries_search_settings', '');
+  $search_options = explode("\n", $search_settings);
+  $options = array();
+  foreach ($search_options as $search_option) {
+    $option = explode("|", $search_option);
+    $options[$option[0]] = $option[2];
+  }
+  $query = urlencode($form_state['values']['search_string']);
+  $destination = $form_state['values']['search_type'];
+
+  // Build url
+  if (strpos($options[$destination],'http') !== false) {
+    $url = $options[$destination] . $query;
+    // Parse url for drupal_goto()
+    $parts = parse_url($url);
+    $site_url = $parts['scheme'] . '://' . $parts['host'] . $parts['path'];
+    // Remove these from url array since we don't need them anymore
+    unset($parts['scheme']);
+    unset($parts['host']);
+    unset($parts['path']);
+    // Parse query string into array for drupal_goto()
+    parse_str($parts['query'], $query_parts);
+    $parts['query'] = $query_parts;
+    drupal_goto($site_url, $parts);
+  } else {
+    global $base_url;
+    $form_state['action'] = 'gsearch/';
+    $search_query = urlencode($query . ' site:' . $base_url . '/' . $options[$destination]);
+    $form_state['redirect'] = url($form_state['action'] . $search_query, array('absolute' => TRUE));
+  }
+
+
+
 
 }
 
@@ -125,16 +209,6 @@ function cu_libraries_search_block_configure($delta = '') {
         '#format' => $search_content['format'],
         '#required' => FALSE,
       );
-      $form['hide_site_search'] = array(
-        '#type' => 'radios',
-        '#title' => t('Site Search'),
-        '#options' => array(
-          'show' => 'Show',
-          'hide' => 'Hide',
-        ),
-        '#default_value' => variable_get('hide_site_search', 'show'),
-        '#required' => TRUE,
-      );
       break;
     case 'libraries_search_small':
       $search_content = variable_get('libraries_search_content_small', array(
@@ -147,16 +221,6 @@ function cu_libraries_search_block_configure($delta = '') {
         '#default_value' => $search_content['value'],
         '#format' => $search_content['format'],
         '#required' => FALSE,
-      );
-      $form['hide_site_search'] = array(
-        '#type' => 'radios',
-        '#title' => t('Site Search'),
-        '#options' => array(
-          'show' => 'Show',
-          'hide' => 'Hide',
-        ),
-        '#default_value' => variable_get('hide_site_search', 'show'),
-        '#required' => TRUE,
       );
       break;
   }
@@ -173,12 +237,10 @@ function cu_libraries_search_block_save($delta = '', $edit = array()) {
       // Have Drupal save the string to the database.
       variable_set('search_background_image', $edit['search_background_image']);
       variable_set('libraries_search_content_large', $edit['libraries_search_content']);
-      variable_set('hide_site_search', $edit['hide_site_search']);
       break;
     case 'libraries_search_small':
       // Have Drupal save the string to the database.
       variable_set('libraries_search_content_small', $edit['libraries_search_content']);
-      variable_set('hide_site_search', $edit['hide_site_search']);
       break;
   }
   return;
