@@ -25,6 +25,12 @@ function cu_libraries_search_settings_form($form, &$form_state) {
     '#description' => t('Enter one value per row in the form: <em>searchkey|Search Name|Search URL</em>'),
     '#wysiwyg' => FALSE,
   );
+  $form['cu_libraries_search_placeholder'] = array(
+      '#type' => 'textfield',
+      '#default_value' => variable_get('cu_libraries_search_placeholder', 'Search'),
+      '#title' => t('Search Placeholder'),
+      '#description' => t('The placeholder text that appears in the search box.</em>'),
+  );
   $form['hide_site_search'] = array(
     '#type' => 'radios',
     '#title' => t('Site Search'),
@@ -43,8 +49,11 @@ function cu_libraries_search_settings_form($form, &$form_state) {
 function cu_libraries_search_settings_form_submit($form, &$form_state) {
   $search_settings = $form_state['values']['cu_libraries_search_settings'];
   variable_set('cu_libraries_search_settings', $search_settings);
+  $placeholder_settings = !empty($form_state['values']['cu_libraries_search_placeholder']) ?  $form_state['values']['cu_libraries_search_placeholder'] : 'Search';
+  variable_set('cu_libraries_search_placeholder', $placeholder_settings);
   $site_search_settings = $form_state['values']['hide_site_search'];
   variable_set('hide_site_search', $site_search_settings);
+  drupal_set_message(t('Search settings have been saved.'));
 }
 
 function cu_libraries_search_options() {
@@ -82,6 +91,7 @@ function cu_libraries_search_block_info() {
 
 function cu_libraries_search_search_form($form, &$form_state) {
   $form = array();
+  $placeholder = variable_get('cu_libraries_search_placeholder', 'Search');
   $form['libraries_search'] = array(
     '#type' => 'fieldset',
     '#title' => NULL,
@@ -90,7 +100,7 @@ function cu_libraries_search_search_form($form, &$form_state) {
   $form['libraries_search']['search_string'] = array(
     '#type' => 'textfield',
     //'#default_value' => t('Search CU Libraries'),
-    '#attributes' => array('placeholder' => 'Search CU Libraries'),
+    '#attributes' => array('placeholder' => $placeholder),
     '#title' => 'Search CU Libraries',
     '#title_display' => 'invisible',
   );
@@ -118,7 +128,6 @@ function cu_libraries_search_search_form_submit($form, &$form_state) {
   }
   $query = urlencode($form_state['values']['search_string']);
   $destination = $form_state['values']['search_type'];
-
   // Build url
   if (strpos($options[$destination],'http') !== false) {
     $url = trim($options[$destination]) . trim($query);
