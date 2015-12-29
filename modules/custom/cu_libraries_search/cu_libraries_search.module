@@ -26,10 +26,10 @@ function cu_libraries_search_settings_form($form, &$form_state) {
     '#wysiwyg' => FALSE,
   );
   $form['cu_libraries_search_placeholder'] = array(
-      '#type' => 'textfield',
-      '#default_value' => variable_get('cu_libraries_search_placeholder', 'Search'),
-      '#title' => t('Search Placeholder'),
-      '#description' => t('The placeholder text that appears in the search box.</em>'),
+    '#type' => 'textfield',
+    '#default_value' => variable_get('cu_libraries_search_placeholder', 'Search'),
+    '#title' => t('Search Placeholder'),
+    '#description' => t('The placeholder text that appears in the search box.</em>'),
   );
   $form['hide_site_search'] = array(
     '#type' => 'radios',
