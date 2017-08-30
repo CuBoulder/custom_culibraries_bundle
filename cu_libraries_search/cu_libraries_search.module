@@ -72,7 +72,7 @@ function cu_libraries_search_page_alter(&$page) {
   drupal_add_css(drupal_get_path('module', 'cu_libraries_search') . '/css/cu-libraries-search.css');
   $site_search = variable_get('hide_site_search', 'show');
   if ($site_search == 'hide') {
-    drupal_add_css('.search-toggle {display:none !important;}', array('type' => 'inline'));
+    drupal_add_css('.search-toggle, .region-search-box {display:none !important;}', array('type' => 'inline'));
   }
 }
 
