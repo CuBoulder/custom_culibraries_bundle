@@ -1,7 +1,7 @@
 name = CU Libraries Bundle
 description = Custom module for CU Libraries
 core = 7.x
-version =  7.x-1.1
+version =  7.x-1.2
 project = culibraries
-project status url = https://github.com/CuBoulder/express_culibraries
+project status url = https://github.com/CuBoulder/custom_culibraries_bundle
 dependencies[] = cu_libraries_search
