@@ -104,3 +104,12 @@
   color: #333;
   font-weight: 600;
 }
+.library-search-box legend {
+  border: 0;
+  height: 1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute !important;
+  width: 1px;
+  white-space: nowrap;
+}
