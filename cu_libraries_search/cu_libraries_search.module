@@ -25,11 +25,17 @@ function cu_libraries_search_settings_form($form, &$form_state) {
     '#description' => t('Enter one value per row in the form: <em>searchkey|Search Name|Search URL</em>'),
     '#wysiwyg' => FALSE,
   );
+  $form['cu_libraries_search_title'] = array(
+    '#type' => 'textfield',
+    '#default_value' => variable_get('cu_libraries_search_title', 'Search'),
+    '#title' => t('Search Title'),
+    '#description' => t('This text is used for accessibility purposes.'),
+  );
   $form['cu_libraries_search_placeholder'] = array(
     '#type' => 'textfield',
     '#default_value' => variable_get('cu_libraries_search_placeholder', 'Search'),
     '#title' => t('Search Placeholder'),
-    '#description' => t('The placeholder text that appears in the search box.</em>'),
+    '#description' => t('The placeholder text that appears in the search box.'),
   );
   $form['hide_site_search'] = array(
     '#type' => 'radios',
@@ -94,19 +100,24 @@ function cu_libraries_search_search_form($form, &$form_state) {
   $placeholder = variable_get('cu_libraries_search_placeholder', 'Search');
   $form['libraries_search'] = array(
     '#type' => 'fieldset',
-    '#title' => NULL,
-    '#attributes' => array('class' => array('container-inline')),
+    '#title' => variable_get('cu_libraries_search_title', 'Search'),
+    '#title_display' => 'invisible',
+    '#attributes' => array('class' => array('container-inline library-search-box')),
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
   );
   $form['libraries_search']['search_string'] = array(
     '#type' => 'textfield',
     //'#default_value' => t('Search CU Libraries'),
     '#attributes' => array('placeholder' => $placeholder),
-    '#title' => 'Search CU Libraries',
+    '#title' => 'Query',
     '#title_display' => 'invisible',
   );
   $form['libraries_search']['search_type'] = array(
     '#type' => 'select',
     '#options' => cu_libraries_search_options(),
+    '#title' => 'Search Type',
+    '#title_display' => 'invisible',
   );
   $form['libraries_search']['search_submit'] = array(
     '#type' => 'submit',
