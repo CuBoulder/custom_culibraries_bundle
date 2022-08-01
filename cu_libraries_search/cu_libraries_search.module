@@ -109,7 +109,7 @@ function cu_libraries_search_search_form($form, &$form_state) {
   $form['libraries_search']['search_string'] = array(
     '#type' => 'textfield',
     //'#default_value' => t('Search CU Libraries'),
-    '#attributes' => array('placeholder' => $placeholder),
+    '#attributes' => array('placeholder' => $placeholder, 'maxlength' => '1028'),
     '#title' => 'Query',
     '#title_display' => 'invisible',
   );
